@@ -119,10 +119,17 @@ class EllipticCurve:
         return self.aff_add((x1,y1),(x2,-y2))
 
 
-
-
-
-
+    def skalarmult(self,x,P: (int,int)):
+        if x <= 0:
+            raise RuntimeError("x is not positive")
+        #Handling neutral in affin
+        if P is "INF":
+            return "INF"
+        P = self.affintoproj(P)
+        Px = INF
+        for y in range(x):
+            Px = self.proj_add(Px, P)
+        return self.projtoaffin(Px)
 
 #Hilfsmethoden
 
