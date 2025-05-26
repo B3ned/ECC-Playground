@@ -10,16 +10,16 @@ class EllipticCurve:
         self.ec_n = ec_n
         '''
         ECC like y**2 = x**3 + ax + b
-        :param x: x value of ECC in int or hex in str
-        :param ec_a: steigung der ECC in int or hex in str
-        :param ec_b: Const of ECC in int or hex in str
-        :param ec_p: GF of ECC in int or hex in str
+        :param x: x value of ECC in int or hex
+        :param ec_a: steigung der ECC in int or hex 
+        :param ec_b: Const of ECC in int or hex
+        :param ec_p: GF of ECC in int or hex
         '''
 
     def proj_add(self, P: (int,int,int), Q: (int,int,int)):
         '''
         :input: Proj Point on ECC
-        :return: Aff Point on ECC
+        :return: Proj Point on ECC
         '''
         if P == INF:
             return Q
@@ -53,7 +53,7 @@ class EllipticCurve:
     def proj_dbl(self, P: (int,int,int)):
         '''
         :param P: Proj Point on ECC
-        :return: Aff Point on ECC
+        :return: Proj Point on ECC
         '''
         X, Y, Z = P
         W = (3 * X**2 + self.ec_a * Z**2) % self.ec_p
@@ -65,13 +65,36 @@ class EllipticCurve:
         Z2 = (8 * S**3) % self.ec_p
         return X2, Y2, Z2
 
+
+    def skalarmult(self, x, P):
+        '''
+            :param x: Skalar int
+            :param P: Point on ECC in affin
+            :return: Point on ECC in affin
+        '''
+        if x <= 0:
+            raise RuntimeError("x is not positive")
+        # Handling neutral in affin
+        if P == INF:
+            return INF
+        # Aufpassen, dass nicht ausversehen Ordnung der Gruppe erreicht wird
+        x = x % self.ec_p
+        Q = INF
+        P = self.affintoproj(P, Z=None)
+        for bit in bin(x)[2:]:
+            if bit == '1':
+                Q = self.proj_add(Q,P)
+            P = self.proj_dbl(P)
+        return self.projtoaffin(Q)
+
+    def privkeygen(self):
+        return random.randint(1, self.ec_n - 1)
+
     # Transformationen
     def projtoaffin(self, P: (int, int, int)):
         X, Y, Z = P
         return modDivision(X, Z, self.ec_p), modDivision(Y, Z, self.ec_p)
-    def projtoaffin2(self, P: (int, int, int)):
-        X, Y, Z = P
-        return modDivision(X, Z, self.ec_p), modDivision(Y, Z, self.ec_p)
+
 
     def affintoproj(self, P, Z = None):
         if Z is None:
@@ -123,28 +146,6 @@ class EllipticCurve:
         x2, y2 = Q
         return self.aff_add((x1,y1),(x2,-y2))
 
-    def skalarmult(self, x, P: (int, int)):
-        if x <= 0:
-            raise RuntimeError("x is not positive")
-        # Handling neutral in affin
-        if P == INF:
-            return INF
-        # Aufpassen, dass nicht ausversehen Ordnung der Gruppe erreicht wird
-        x = x % self.ec_p
-        R = INF
-        Q = self.affintoproj(P, Z = None)
-        while x > 0:
-            if x & 1:
-                R = self.proj_add(R, Q)
-            Q = self.proj_dbl(Q)
-            x >>= 1
-        return self.projtoaffin(R)
-
-
-
-
-    def privkeygen(self):
-        return random.randint(1, self.ec_n-1)
 
 #Hilfsmethoden
 
@@ -169,6 +170,9 @@ def hexTransformer(s: str):
     prefix = s[2:4]
     s = s[:2] + s[4:]
     return int(prefix), int(s,16)
+
+
+
 
 
 
