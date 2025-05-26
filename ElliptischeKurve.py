@@ -1,10 +1,13 @@
+import random
+import numpy as np
+
 INF = (0,1,0)
 class EllipticCurve:
-    def __init__(self, ec_a, ec_b, ec_p):
+    def __init__(self, ec_a, ec_b, ec_p, ec_n):
         self.ec_a = ec_a
         self.ec_b = ec_b
         self.ec_p = ec_p
-
+        self.ec_n = ec_n
         '''
         ECC like y**2 = x**3 + ax + b
         :param x: x value of ECC in int or hex in str
@@ -66,6 +69,9 @@ class EllipticCurve:
     def projtoaffin(self, P: (int, int, int)):
         X, Y, Z = P
         return modDivision(X, Z, self.ec_p), modDivision(Y, Z, self.ec_p), 1
+    def projtoaffin2(self, P: (int, int, int)):
+        X, Y, Z = P
+        return modDivision(X, Z, self.ec_p), modDivision(Y, Z, self.ec_p)
 
     def affintoproj(self, P: (int, int), Z = 1):
         X, Y= P
@@ -118,18 +124,28 @@ class EllipticCurve:
         x2, y2 = Q
         return self.aff_add((x1,y1),(x2,-y2))
 
-
-    def skalarmult(self,x,P: (int,int)):
+    def skalarmult(self, x, P: (int, int)):
         if x <= 0:
             raise RuntimeError("x is not positive")
-        #Handling neutral in affin
-        if P is "INF":
+        # Handling neutral in affin
+        if P == "INF":
             return "INF"
-        P = self.affintoproj(P)
-        Px = INF
-        for y in range(x):
-            Px = self.proj_add(Px, P)
-        return self.projtoaffin(Px)
+        # Aufpassen, dass nicht ausversehen Ordnung der Gruppe erreicht wird
+        x = x % self.ec_p
+        R = INF
+        Q = self.affintoproj(P)
+        while x > 0:
+            if x & 1:
+                R = self.proj_add(R, Q)
+            Q = self.proj_dbl(Q)
+            x >>= 1
+        return self.projtoaffin(R)
+
+
+
+
+    def privkeygen(self):
+        return random.randint(1, self.ec_n-1)
 
 #Hilfsmethoden
 
@@ -143,15 +159,6 @@ def isResidue(z, p):
     # Euler Kriterium
     return (z ** modDivision(p-1, 2, p)) % p == 1
 print(pow(1, modDivision(17+1, 4, 17), 17))
-
-
-def transformer(s):
-    if type(s) == int:
-        return s
-    if s.startswith('0x'):
-        return int(s, 16)
-
-    raise Exception("Falscher Eingabewert")
 
 def hexTransformer(s: str):
     if type(s) == int:
