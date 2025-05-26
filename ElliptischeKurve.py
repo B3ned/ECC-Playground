@@ -47,7 +47,7 @@ class EllipticCurve:
         X3 = (V * A) % self.ec_p
         Y3 = (U * (V**2 * V2 - A) - V**3 * U2) % self.ec_p
         Z3 = (V**3 * W) % self.ec_p
-        return self.projtoaffin((X3, Y3, Z3))
+        return X3, Y3, Z3
 
 
     def proj_dbl(self, P: (int,int,int)):
@@ -63,22 +63,21 @@ class EllipticCurve:
         X2 = (2 * H * S) % self.ec_p
         Y2 = (W * (4 * B - H) - 8 * Y**2 * S**2) % self.ec_p
         Z2 = (8 * S**3) % self.ec_p
-        return self.projtoaffin((X2, Y2, Z2))
+        return X2, Y2, Z2
 
     # Transformationen
     def projtoaffin(self, P: (int, int, int)):
         X, Y, Z = P
-        return modDivision(X, Z, self.ec_p), modDivision(Y, Z, self.ec_p), 1
+        return modDivision(X, Z, self.ec_p), modDivision(Y, Z, self.ec_p)
     def projtoaffin2(self, P: (int, int, int)):
         X, Y, Z = P
         return modDivision(X, Z, self.ec_p), modDivision(Y, Z, self.ec_p)
 
-    def affintoproj(self, P: (int, int), Z = 1):
+    def affintoproj(self, P, Z = None):
+        if Z is None:
+            Z = 1
         X, Y= P
         return modDivision(X,Z,self.ec_p), modDivision(Y,Z,self.ec_p), Z
-
-    def affintoprojScaled(self, P: (int, int), Z):
-        return self.affintoproj(P, Z)
 
     # Methoden für affinen Raum
     def aff_getY(self, ec_x: str):
@@ -128,12 +127,12 @@ class EllipticCurve:
         if x <= 0:
             raise RuntimeError("x is not positive")
         # Handling neutral in affin
-        if P == "INF":
-            return "INF"
+        if P == INF:
+            return INF
         # Aufpassen, dass nicht ausversehen Ordnung der Gruppe erreicht wird
         x = x % self.ec_p
         R = INF
-        Q = self.affintoproj(P)
+        Q = self.affintoproj(P, Z = None)
         while x > 0:
             if x & 1:
                 R = self.proj_add(R, Q)
@@ -170,6 +169,11 @@ def hexTransformer(s: str):
     prefix = s[2:4]
     s = s[:2] + s[4:]
     return int(prefix), int(s,16)
+
+
+
+
+
 
 
 
