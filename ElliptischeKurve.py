@@ -110,17 +110,24 @@ class EllipticCurve:
         :return: y Value if exists
         """
         prefix, x = hexTransformer(ec_x)
-        y2 = pow(x, 3, self.ec_p) + self.ec_a * x + self.ec_b
+        isEven = prefix % 2 == 0
+        y2 = (pow(x, 3, self.ec_p) + self.ec_a * x + self.ec_b) % self.ec_p
         if not isResidue(y2, self.ec_p):
             print("Punkt liegt nicht auf der Kurve")
             return None
         if y2 % 4 == 3:
             y = pow(y2, modDivision(self.ec_p + 1, 4, self.ec_p), self.ec_p)
-            if prefix % 2 == 0 and y % 2 == 0:
-                print(y)
-                return y
+            if isEven:
+                if y % 2 == 0:
+                    print(f"in erste if")
+                    return y
+                else:
+                    return (self.ec_p - y) % self.ec_p
             else:
-                return (self.ec_p - y) % self.ec_p
+                if y % 2 == 0:
+                    return (self.ec_p - y) % self.ec_p
+                else:
+                    return y
         else:
             raise NotImplementedError("Tonelli-Shanks nicht implementiert bro")
 
@@ -157,8 +164,7 @@ def modDivision(x, y, p):
 
 def isResidue(z, p):
     # Euler Kriterium
-    return (z ** modDivision(p-1, 2, p)) % p == 1
-print(pow(1, modDivision(17+1, 4, 17), 17))
+    return pow(z,modDivision(p-1, 2, p),p) == 1
 
 def hexTransformer(s: str):
     if type(s) == int:
@@ -166,12 +172,18 @@ def hexTransformer(s: str):
     if not s.startswith('0x'):
         print("Falscher Eingabewert")
         return None
-    s = s.replace('0x', '')
     prefix = s[2:4]
     s = s[:2] + s[4:]
-    return int(prefix), int(s,16)
+    return int(prefix,16), int(s,16)
 
 
+ec_p = 0x80000000000000000000000FF
+ec_a = 0x7D5A0975FC2C3057EEF67530417AFFE7FB8055C126DC5C6CE94A4B44F330B5D9
+ec_b = 0x26DC5C6CE94A4B44F330B5D9BBD77CBF958416295CF7E1CE6BCCDC18FF8C07B6
+ec_n = 0xA9FB57DBA1EEA9BC3E660A909D838D718C397AA3B561A6F7901E0E82974856A7
+x = "0x020EB454766FC2E2C43991"
+Ecc = EllipticCurve(ec_a, ec_b, ec_p, ec_n)
+y = Ecc.aff_getY(x)
 
 
 
