@@ -8,6 +8,7 @@ class EllipticCurve:
         self.ec_b = ec_b
         self.ec_p = ec_p
         self.ec_n = ec_n
+        self.privKey = self.privkeygen()
         '''
         ECC like y**2 = x**3 + ax + b
         :param x: x value of ECC in int or hex
@@ -175,7 +176,6 @@ def hexTransformer(s: str):
     prefix = s[2:4]
     s = s[:2] + s[4:]
     return int(prefix,16), int(s,16)
-
 
 
 
