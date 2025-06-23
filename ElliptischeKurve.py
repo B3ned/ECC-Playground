@@ -65,27 +65,53 @@ class EllipticCurve:
         Y2 = (W * (4 * B - H) - 8 * Y**2 * S**2) % self.ec_p
         Z2 = (8 * S**3) % self.ec_p
         return X2, Y2, Z2
+    '''
+    def skalarmult(self, k, P):
+        """
+        Double-and-add (rechts-nach-links, LSB-first) in projektiven Koordinaten.
+        Gibt den Punkt in affinen Koordinaten zurück.
+        """
+        if k <= 0:
+            raise ValueError("k muss positiv sein")
+        xX, yY = P
+        if xX == 0 or yY == 0:
+            raise ValueError("Punkt darf keine 0 Elemente haben")
 
+        #  Nimm hier die Ordnung der Kurve (ec_n)
+        k %= self.ec_n
 
-    def skalarmult(self, x, P):
+        R = self.affintoproj(P)  # laufende Basis
+        Q = INF  # Akkumulator (startet mit neutralem Element)
+
+        while k:
+            if k & 1:  # niedrigstes Bit 1?
+                Q = self.proj_add(Q, R)
+            R = self.proj_dbl(R)  # Basis verdoppeln
+            k >>= 1  # nächstes Bit
+        return self.projtoaffin(Q)
         '''
-            :param x: Skalar int
-            :param P: Point on ECC in affin
-            :return: Point on ECC in affin
-        '''
-        if x <= 0:
-            raise RuntimeError("x is not positive")
-        # Handling neutral in affin
-        if P == INF:
-            return INF
-        # Aufpassen, dass nicht ausversehen Ordnung der Gruppe erreicht wird
-        x = x % self.ec_p
-        Q = INF
-        P = self.affintoproj(P, Z=None)
-        for bit in bin(x)[2:]:
-            if bit == '1':
-                Q = self.proj_add(Q,P)
-            P = self.proj_dbl(P)
+
+    def skalarmult(self, k, P):
+        """
+        Double-and-add (MSB first, links-nach-rechts) in projektiven Koordinaten.
+        Gibt den Punkt in affinen Koordinaten zurück.
+        """
+        if k <= 0:
+            raise ValueError("k muss positiv sein")
+        xX, yY = P
+        if xX == 0 or yY == 0:
+            raise ValueError("Punkt darf keine 0 Elemente haben")
+
+        #  Nimm hier die Ordnung der Kurve (ec_n)
+        k %= self.ec_n
+        bin_k = bin(k)[3:]
+        R = self.affintoproj(P)  # laufende Basis
+        Q = R  # Akkumulator (startet mit neutralem Element)
+
+        for x in bin_k:
+            Q = self.proj_dbl(Q)
+            if x == "1":
+                Q = self.proj_add(Q, R)
         return self.projtoaffin(Q)
 
     def privkeygen(self):
