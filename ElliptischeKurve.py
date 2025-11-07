@@ -1,6 +1,8 @@
 import random
 import numpy as np
 
+
+
 INF = (0,1,0)
 class EllipticCurve:
     def __init__(self, ec_a, ec_b, ec_p, ec_n):
@@ -65,31 +67,6 @@ class EllipticCurve:
         Y2 = (W * (4 * B - H) - 8 * Y**2 * S**2) % self.ec_p
         Z2 = (8 * S**3) % self.ec_p
         return X2, Y2, Z2
-    '''
-    def skalarmult(self, k, P):
-        """
-        Double-and-add (rechts-nach-links, LSB-first) in projektiven Koordinaten.
-        Gibt den Punkt in affinen Koordinaten zurück.
-        """
-        if k <= 0:
-            raise ValueError("k muss positiv sein")
-        xX, yY = P
-        if xX == 0 or yY == 0:
-            raise ValueError("Punkt darf keine 0 Elemente haben")
-
-        #  Nimm hier die Ordnung der Kurve (ec_n)
-        k %= self.ec_n
-
-        R = self.affintoproj(P)  # laufende Basis
-        Q = INF  # Akkumulator (startet mit neutralem Element)
-
-        while k:
-            if k & 1:  # niedrigstes Bit 1?
-                Q = self.proj_add(Q, R)
-            R = self.proj_dbl(R)  # Basis verdoppeln
-            k >>= 1  # nächstes Bit
-        return self.projtoaffin(Q)
-        '''
 
     def skalarmult(self, k, P):
         """
@@ -128,7 +105,7 @@ class EllipticCurve:
             Z = 1
         X, Y= P
         return modDivision(X,Z,self.ec_p), modDivision(Y,Z,self.ec_p), Z
-
+ 
     # Methoden für affinen Raum
     def aff_getY(self, ec_x: str):
         # TODO Vielleicht falsch impl nochmal drüber gucken
@@ -203,9 +180,14 @@ def hexTransformer(s: str):
     s = s[:2] + s[4:]
     return int(prefix,16), int(s,16)
 
+def stringtointList(l:list[str]) -> list[int]:
+    return [int(x) for x in l]
 
 
 
+
+if __name__ == "__main__":
+    main()
 
 
 
