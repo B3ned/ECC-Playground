@@ -3,6 +3,7 @@ import numpy as np
 
 
 
+
 INF = (0,1,0)
 class EllipticCurve:
     def __init__(self, ec_a, ec_b, ec_p, ec_n):
@@ -110,11 +111,11 @@ class EllipticCurve:
     def aff_getY(self, ec_x: str):
         # TODO Vielleicht falsch impl nochmal drüber gucken
         """
-        :param ec_x: X in komprimierter Form mit prefix 0x in str
+        :param ec_x: X in komprimierter Form mit paritybit 0x in str
         :return: y Value if exists
         """
-        prefix, x = hexTransformer(ec_x)
-        isEven = prefix % 2 == 0
+        paritybit, x = hexTransformer(ec_x)
+        isEven = paritybit % 2 == 0
         y2 = (pow(x, 3, self.ec_p) + self.ec_a * x + self.ec_b) % self.ec_p
         if not isResidue(y2, self.ec_p):
             print("Punkt liegt nicht auf der Kurve")
@@ -123,7 +124,6 @@ class EllipticCurve:
             y = pow(y2, modDivision(self.ec_p + 1, 4, self.ec_p), self.ec_p)
             if isEven:
                 if y % 2 == 0:
-                    print(f"in erste if")
                     return y
                 else:
                     return (self.ec_p - y) % self.ec_p
@@ -176,18 +176,14 @@ def hexTransformer(s: str):
     if not s.startswith('0x'):
         print("Falscher Eingabewert")
         return None
-    prefix = s[2:4]
+    paritybit = s[2:4]
     s = s[:2] + s[4:]
-    return int(prefix,16), int(s,16)
+    return int(paritybit,16), int(s,16)
 
 def stringtointList(l:list[str]) -> list[int]:
     return [int(x) for x in l]
 
 
-
-
-if __name__ == "__main__":
-    main()
 
 
 
